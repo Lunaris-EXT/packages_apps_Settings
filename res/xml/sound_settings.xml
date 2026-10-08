@@ -99,22 +99,14 @@
             settings:userRestriction="no_adjust_volume"
             settings:controller="com.android.settings.notification.AlarmVolumePreferenceController"/>
 
-        <!-- Increasing ring -->
-        <lineageos.preference.LineageSystemSettingSwitchPreference
-            android:key="increasing_ring"
-            android:title="@string/increasing_ring_volume_option_title"
-            android:order="-136"
+        <!-- Assistant volume -->
+        <com.android.settings.sound.VolumeSliderPreference
+            android:key="assistant_volume"
+            android:icon="@*android:drawable/ic_volume_voice_chat"
+            android:title="@string/assistant_volume_option_title"
+            android:order="-130"
             settings:userRestriction="no_adjust_volume"
-            settings:controller="com.android.settings.notification.IncreasingRingPreferenceController" />
-
-        <!-- Increasing ring volume -->
-        <com.android.settings.notification.IncreasingRingVolumePreference
-            android:key="increasing_ring_volume"
-            android:icon="@drawable/ring_notif_increasing"
-            android:dependency="increasing_ring"
-            android:order="-135"
-            settings:userRestriction="no_adjust_volume"
-            settings:controller="com.android.settings.notification.IncreasingRingVolumePreferenceController" />
+            settings:controller="com.android.settings.notification.AssistantVolumePreferenceController"/>
     </com.android.settingslib.widget.UntitledPreferenceCategory>
 
     <!-- Vibrations and haptics category -->
@@ -265,7 +257,8 @@
         <!-- Custom charging sounds -->
         <lineageos.preference.LineagePartsPreference
             android:key="charging_sounds_settings"
-            settings:replacesKey="charging_sounds"
+            android:order="-39"
+            settings:replacesKey="charging_sounds_enabled"
             settings:requiresConfig="@bool/config_show_charging_sounds" />
 
         <!-- Docking sounds -->

@@ -31,9 +31,13 @@ class DarkModeBlackThemePreference(context: Context, private val darkModeStorage
 
     override val key: String = LineageSettings.Secure.BERRY_BLACK_THEME
 
+    override val purpose: Int = R.string.berry_black_theme_purpose
+
     override val title: Int = R.string.berry_black_theme_title
 
     override val summary: Int = R.string.berry_black_theme_summary
+
+    override val supportsWrite = true
 
     override fun storage(context: Context) = blackThemeStorage
 
@@ -47,7 +51,7 @@ class DarkModeBlackThemePreference(context: Context, private val darkModeStorage
     fun isAvailable(context: Context): Boolean {
         return try {
             context.packageManager.getPackageInfo(
-                "com.android.system.theme.black",
+                "org.lineageos.overlay.customization.blacktheme",
                 0,
             )
             true

@@ -28,6 +28,7 @@ import com.android.settingslib.search.SearchIndexable;
 import com.android.settingslib.widget.FooterPreference;
 
 /** A fragment that shows battery hardware information. */
+// LINT.IfChange
 @SearchIndexable
 public class BatteryInfoFragment extends DashboardFragment {
 
@@ -55,10 +56,8 @@ public class BatteryInfoFragment extends DashboardFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        boolean cycleCountAvailable = BatteryInfoUtils.isNodeValid(
-                getContext(), R.string.config_battery_cycle_count_node)
-                || getContext().getResources().getBoolean(R.bool.config_show_battery_cycle_count);
-        mFooterPreference.setVisible(cycleCountAvailable);
+        mFooterPreference.setVisible(
+                getContext().getResources().getBoolean(R.bool.config_show_battery_cycle_count));
     }
 
     @Override
@@ -76,3 +75,4 @@ public class BatteryInfoFragment extends DashboardFragment {
                 }
             };
 }
+// LINT.ThenChange(BatteryInfoApiScreen.kt)

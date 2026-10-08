@@ -21,10 +21,6 @@
     android:key="top_level_settings">
 
     <com.android.settingslib.widget.UntitledPreferenceCategory
-        android:order="-140"
-        android:key="top_level_account_category"/>
-
-    <com.android.settingslib.widget.UntitledPreferenceCategory
         android:order="-130"
         android:key="top_level_connectivity_category">
 
@@ -222,10 +218,21 @@
             android:icon="@drawable/ic_homepage_accounts"
             android:key="top_level_accounts"
             android:order="-10"
-            android:title="@string/account_dashboard_title_with_passkeys"
             android:summary="@string/summary_placeholder"
             settings:highlightableMenuKey="@string/menu_key_accounts"
             settings:controller="com.android.settings.accounts.TopLevelAccountEntryPreferenceController"/>
+
+        <!-- TODO(b/460772532): Set highlightableMenuKey to menu_key_accounts once this screen
+                is ready to display user's accounts instead of AccountDashboardFragment. -->
+        <com.android.settings.widget.HomepagePreference
+            android:fragment="com.android.settings.backup.AccountsAndBackupDashboardFragment"
+            android:icon="@drawable/ic_homepage_accounts_and_backup"
+            android:key="top_level_accounts_and_backup"
+            android:order="-5"
+            android:title="@string/accounts_and_backup_title"
+            android:summary="@string/accounts_and_backup_summary"
+            settings:highlightableMenuKey="@string/menu_key_accounts_and_backup"
+            settings:controller="com.android.settings.backup.TopLevelAccountsAndBackupEntryPreferenceController"/>
 
         <com.android.settings.widget.HomepagePreference
             android:key="top_level_supervision"
@@ -246,6 +253,10 @@
             settings:isPreferenceVisible="@bool/config_show_emergency_settings"
             settings:highlightableMenuKey="@string/menu_key_emergency"/>
     </com.android.settingslib.widget.UntitledPreferenceCategory>
+
+    <com.android.settingslib.widget.UntitledPreferenceCategory
+        android:order="-90"
+        android:key="top_level_account_category"/>
 
     <com.android.settingslib.widget.UntitledPreferenceCategory
         android:order="100"

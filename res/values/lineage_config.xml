@@ -32,41 +32,19 @@
     <!-- Show battery cycle count -->
     <bool name="config_show_battery_cycle_count" translatable="false">false</bool>
 
-    <!-- Show battery Design Capacity -->
-    <bool name="config_show_battery_design_capacity">true</bool>
+    <!-- Whether to show peak refresh rate in display settings -->
+    <bool name="config_show_peak_refresh_rate_switch">false</bool>
 
-    <!-- Show battery Maximum Capacity -->
-    <bool name="config_show_battery_maximum_capacity">true</bool>
+    <!-- Whether to show min refresh rate in display settings -->
+    <bool name="config_show_min_refresh_rate_switch">false</bool>
 
-    <!-- Custom sysfs node paths for battery info. Empty by default (falls back to BatteryManager intent) -->
-    <string name="config_battery_cycle_count_node" translatable="false"></string>
-    <string name="config_battery_maximum_capacity_node" translatable="false"></string>
-    <string name="config_battery_design_capacity_node" translatable="false"></string>
-    <string name="config_battery_voltage_node" translatable="false"></string>
-    <string name="config_battery_temperature_node" translatable="false"></string>
-    <string name="config_battery_health_node" translatable="false"></string>
-    <string name="config_battery_technology_node" translatable="false"></string>
-    <string name="config_battery_manufacture_date_node" translatable="false"></string>
-    <string name="config_battery_first_use_date_node" translatable="false"></string>
+    <!-- Whether Settings should open a separate camera preview during face enrollment -->
+    <bool name="config_face_enroll_hal_owns_camera">false</bool>
 
-    <!-- ComponentName to launch a vendor-specific enrollment activity if available -->
-    <string name="config_face_enroll">com.android.settings/com.google.android.settings.biometrics.face.FaceEnrollActivityDirector</string>
+    <!-- Whether the face HAL supports the require attention feature -->
+    <bool name="config_face_attention_supported">true</bool>
 
-    <!-- Whether or not to use traffic light enroll -->
-    <bool name="config_face_enroll_use_traffic_light">false</bool>
-
-    <!-- Traffic light package to use -->
-    <string name="config_face_enroll_traffic_light_package"></string>
-
-    <!-- Face enroll finish text -->
-    <string name="security_settings_face_enroll_finish_description_with_bp">Now you can use your face to unlock your phone or verify it’s you, like when you sign in to apps or approve a purchase</string>
-
-    <!-- Show Now Playing -->
-    <bool name="config_show_now_playing">false</bool>
-
-    <!-- Whether to use PowerProfile as the primary source for battery design capacity -->
-    <bool name="config_use_power_profile_for_battery_capacity">false</bool>
-
-    <!-- Whether to show double tap ambient settings -->
-    <bool name="config_supports_double_tap_ambient" translatable="false">false</bool>
+    <!-- Descriptors of game controllers to hide from GameControllerListFragment. -->
+    <string-array name="config_hidden_game_controller_descriptors" translatable="false">
+    </string-array>
 </resources>

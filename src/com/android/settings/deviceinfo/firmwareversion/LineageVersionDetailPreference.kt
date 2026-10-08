@@ -43,6 +43,9 @@ class LineageVersionDetailPreference :
     override val key: String
         get() = "lineage_version"
 
+    override val purpose: Int
+        get() = R.string.os_firmware_version_purpose
+
     override val title: Int
         get() = org.lineageos.platform.internal.R.string.lineage_version
 
@@ -102,7 +105,7 @@ class LineageVersionDetailPreference :
         const val ACTIVITY_TRIGGER_COUNT = 3
         const val DELAY_TIMER_MILLIS = 500L
 
-        const val LINEAGE_VERSION_PROPERTY: String = "ro.lunaris.build.version"
+        const val LINEAGE_VERSION_PROPERTY: String = "ro.lineage.version"
 
         const val PLATLOGO_PACKAGE_NAME: String = "org.lineageos.lineageparts"
         const val PLATLOGO_ACTIVITY_CLASS: String = PLATLOGO_PACKAGE_NAME + ".logo.PlatLogoActivity"

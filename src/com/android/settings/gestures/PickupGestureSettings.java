@@ -30,9 +30,7 @@ import com.android.settingslib.core.AbstractPreferenceController;
 import com.android.settingslib.core.lifecycle.Lifecycle;
 import com.android.settingslib.search.SearchIndexable;
 
-import java.util.ArrayList;
-import java.util.List;
-
+// LINT.IfChange
 @SearchIndexable
 public class PickupGestureSettings extends DashboardFragment {
 
@@ -92,3 +90,4 @@ public class PickupGestureSettings extends DashboardFragment {
                 }
             };
 }
+// LINT.ThenChange(PickupGestureApiScreen.kt)

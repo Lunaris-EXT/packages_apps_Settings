@@ -30,18 +30,8 @@ import android.os.UserHandle;
 import android.provider.Settings;
 import android.text.TextUtils;
 
-import androidx.preference.Preference;
-import androidx.preference.PreferenceScreen;
-
-import com.android.settings.R;
-import com.android.settings.core.TogglePreferenceController;
-import com.android.settingslib.core.lifecycle.LifecycleObserver;
-import com.android.settingslib.core.lifecycle.events.OnStart;
-import com.android.settingslib.core.lifecycle.events.OnStop;
-import com.android.settingslib.PrimarySwitchPreference;
-
-public class PickupGesturePreferenceController extends TogglePreferenceController
-        implements LifecycleObserver, OnStart, OnStop {
+// LINT.IfChange
+public class PickupGesturePreferenceController extends GesturePreferenceController {
 
     private static final int ON = 1;
     private static final int OFF = 0;
@@ -189,3 +179,4 @@ public class PickupGesturePreferenceController extends TogglePreferenceControlle
         }
     }
 }
+// LINT.ThenChange(PickupGestureApiScreen.kt)

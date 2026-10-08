@@ -20,7 +20,7 @@ package com.android.settings.biometrics;
 import static android.content.pm.PackageManager.FEATURE_PC;
 
 import static com.android.settings.biometrics.BiometricEnrollActivity.EXTRA_SKIP_INTRO;
-import static com.android.settings.flags.Flags.biometricEnrollmentSkipSplitscreenChecksOnDesktop;
+
 
 import android.annotation.IntDef;
 import android.app.Activity;
@@ -30,14 +30,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.hardware.biometrics.BiometricManager;
+import android.hardware.biometrics.SensorLocationInternal;
 import android.hardware.biometrics.SensorProperties;
 import android.hardware.face.FaceManager;
 import android.hardware.face.FaceSensorPropertiesInternal;
+import android.hardware.fingerprint.FingerprintSensorPropertiesInternal;
 import android.os.Bundle;
 import android.os.storage.StorageManager;
 import android.text.BidiFormatter;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
+import android.view.Display;
+import android.view.DisplayInfo;
 import android.view.Surface;
 
 import androidx.annotation.NonNull;
@@ -57,6 +61,7 @@ import com.android.settings.password.ChooseLockSettingsHelper;
 import com.android.settings.password.SetupChooseLockGeneric;
 import com.android.settingslib.activityembedding.ActivityEmbeddingUtils;
 import com.android.settingslib.widget.SettingsThemeHelper;
+import com.android.systemui.biometrics.UdfpsUtils;
 
 import com.google.android.setupcompat.util.WizardManagerHelper;
 import com.google.android.setupdesign.util.ThemeHelper;
@@ -584,13 +589,43 @@ public class BiometricUtils {
         // TODO(b/419423592): Fix properly but allow desktop devices to bypass check for now
         // A form factor check should not be needed. Instead, only prevent in cases
         // where it won't work or requires new UI to be built to support it (i.e. udfps)
-        if (biometricEnrollmentSkipSplitscreenChecksOnDesktop()) {
-            if (hostActivity.getPackageManager().hasSystemFeature(FEATURE_PC)) {
-                return false;
-            }
+        if (hostActivity.getPackageManager().hasSystemFeature(FEATURE_PC)) {
+            return false;
         }
 
         return hostActivity.isInMultiWindowMode() &&
                 !ActivityEmbeddingUtils.isActivityEmbedded(hostActivity);
+    }
+
+    /**
+     * Returns {@code true} if the device has a low-positioned UDFPS sensor. On low-positioned
+     * UDFPS devices, the sensor is close to the bottom of the screen, which causes the standard
+     * Setup Wizard footer button to overlap the enrollment UI.
+     *
+     * @param context Context that we use to get the display this context is associated with
+     * @param prop The fingerprint sensor properties to check, or {@code null} if unavailable
+     * @return True if the UDFPS sensor is positioned in the bottom quarter of the screen.
+     */
+    public static boolean isUdfpsLocationLow(@NonNull Context context,
+            @Nullable FingerprintSensorPropertiesInternal prop) {
+        if (prop == null || !prop.isAnyUdfpsType()) {
+            return false;
+        }
+
+        final DisplayInfo displayInfo = new DisplayInfo();
+        context.getDisplay().getDisplayInfo(displayInfo);
+        final int naturalHeight = displayInfo.getNaturalHeight();
+        if (naturalHeight <= 0) {
+            return false;
+        }
+
+        final SensorLocationInternal location = prop.getLocation();
+        if (location == null) {
+            return false;
+        }
+
+        final float scaleFactor = new UdfpsUtils().getScaleFactor(displayInfo);
+        final float scaledSensorY = location.sensorLocationY * scaleFactor;
+        return (scaledSensorY / naturalHeight) >= 0.75f;
     }
 }

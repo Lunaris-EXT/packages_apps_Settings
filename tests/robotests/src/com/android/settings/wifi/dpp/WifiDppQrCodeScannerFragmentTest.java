@@ -29,13 +29,14 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
-import android.net.wifi.WifiConfiguration;
+import android.graphics.Matrix;
 
 import androidx.fragment.app.FragmentActivity;
 
@@ -87,6 +88,8 @@ public class WifiDppQrCodeScannerFragmentTest {
 
         mFragment = spy(
                 new WifiDppQrCodeScannerFragment(mWifiPickerTracker, mWifiPermissionChecker));
+
+        when(mFragment.getActivity()).thenReturn(mActivity);
     }
 
     @Test
@@ -115,7 +118,6 @@ public class WifiDppQrCodeScannerFragmentTest {
 
     @Test
     public void onSuccess_noWifiPermission_finishActivityWithoutSetResult() {
-        when(mFragment.getActivity()).thenReturn(mActivity);
         when(mWifiPermissionChecker.canAccessWifiState()).thenReturn(false);
         when(mWifiPermissionChecker.canAccessFineLocation()).thenReturn(false);
 
@@ -127,7 +129,6 @@ public class WifiDppQrCodeScannerFragmentTest {
 
     @Test
     public void onSuccess_hasAccessWifiStatePermissionOnly_finishActivityWithoutSetResult() {
-        when(mFragment.getActivity()).thenReturn(mActivity);
         when(mWifiPermissionChecker.canAccessWifiState()).thenReturn(true);
         when(mWifiPermissionChecker.canAccessFineLocation()).thenReturn(false);
 
@@ -139,7 +140,6 @@ public class WifiDppQrCodeScannerFragmentTest {
 
     @Test
     public void onSuccess_hasAccessFineLocationPermissionOnly_finishActivityWithoutSetResult() {
-        when(mFragment.getActivity()).thenReturn(mActivity);
         when(mWifiPermissionChecker.canAccessWifiState()).thenReturn(false);
         when(mWifiPermissionChecker.canAccessFineLocation()).thenReturn(true);
 
@@ -151,7 +151,6 @@ public class WifiDppQrCodeScannerFragmentTest {
 
     @Test
     public void onSuccess_hasRequiredPermissions_finishActivityWithSetResult() {
-        when(mFragment.getActivity()).thenReturn(mActivity);
         when(mWifiPermissionChecker.canAccessWifiState()).thenReturn(true);
         when(mWifiPermissionChecker.canAccessFineLocation()).thenReturn(true);
 
@@ -173,11 +172,20 @@ public class WifiDppQrCodeScannerFragmentTest {
         assertThat(mFragment.isSecurityMatched(config, SECURITY_PSK)).isTrue();
     }
 
+    /**
+     * Test SAE QR matching PSK Entry (Transition mode)
+     */
     @Test
-    public void isSecurityMatched_tryOpenUpgradeToOwe_returnTrue() {
-        final WifiConfiguration config = createWifiConfiguration(SECURITY_NONE);
-        assertThat(mFragment.isSecurityMatched(config, SECURITY_NONE)).isTrue();
-        assertThat(mFragment.isSecurityMatched(config, SECURITY_OWE)).isTrue();
+    public void isSecurityMatched_trySaeQrToPskEntry_returnTrue() {
+        assertThat(mFragment.isSecurityMatched(SECURITY_SAE, SECURITY_PSK)).isTrue();
+    }
+
+    /**
+     * Test PSK QR matching SAE Entry (Transition mode)
+     */
+    @Test
+    public void isSecurityMatched_tryPskQrToSaeEntry_returnTrue() {
+        assertThat(mFragment.isSecurityMatched(SECURITY_PSK, SECURITY_SAE)).isTrue();
     }
 
     @Test
@@ -253,5 +261,12 @@ public class WifiDppQrCodeScannerFragmentTest {
     private static WifiConfiguration createWifiConfigurationQrcode(String qrcode) {
         final WifiQrCode wifiQrCode = new WifiQrCode(qrcode);
         return wifiQrCode.getWifiConfiguration();
+    }
+
+    @Test
+    public void setTransform_always_runInUiThread() {
+        mFragment.setTransform(mock(Matrix.class));
+
+        verify(mActivity).runOnUiThread(any());
     }
 }

@@ -22,6 +22,7 @@ import android.content.Context
 import android.telephony.SubscriptionManager
 import android.telephony.SubscriptionManager.OnSubscriptionsChangedListener
 import androidx.annotation.VisibleForTesting
+import androidx.preference.Preference
 import com.android.settings.R
 import com.android.settings.contract.KEY_MOBILE_DATA
 import com.android.settings.widget.MainSwitchBarMetadata
@@ -34,9 +35,15 @@ import com.android.settingslib.metadata.PreferenceAvailabilityProvider
 import com.android.settingslib.metadata.PreferenceChangeReason
 import com.android.settingslib.metadata.PreferenceLifecycleContext
 import com.android.settingslib.metadata.PreferenceLifecycleProvider
+import com.android.settingslib.metadata.PreferenceMetadata
 import com.android.settingslib.metadata.ReadWritePermit
-import com.android.settingslib.preference.BooleanValuePreferenceBinding
+import com.android.settingslib.metadata.SensitivityLevel
+import com.android.settingslib.metadata.preferencesapi.preconditions.PreconditionStability
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /** A catalyst main switch preference for switching SIM on/off. */
@@ -44,30 +51,48 @@ import kotlinx.coroutines.runBlocking
 class MobileNetworkMainSwitchPreference(
     context: Context,
     private val subId: Int,
+    private val scope: CoroutineScope,
     private val subscriptionActivationRepository: SubscriptionActivationRepository =
         SubscriptionActivationRepository(context),
-    private val subscriptionRepository: SubscriptionRepository =
-        SubscriptionRepository(context),
+    private val subscriptionRepository: SubscriptionRepository = SubscriptionRepository(context),
 ) :
     MainSwitchBarMetadata,
-    BooleanValuePreferenceBinding,
     PreferenceLifecycleProvider,
-    PreferenceAvailabilityProvider {
+    PreferenceAvailabilityProvider,
+    Preference.OnPreferenceChangeListener {
+
+    val isActivationChangeable = MutableStateFlow(false)
 
     override val key: String
         get() = KEY
+
+    override val purpose: Int
+        get() = R.string.use_sim_switch_catalyst_purpose
 
     override val title: Int
         get() = R.string.mobile_network_use_sim_on
 
     override fun isEnabled(context: Context): Boolean {
-        return runBlocking { subscriptionActivationRepository.isActivationChangeableFlow().first() }
+        return isActivationChangeable.value
     }
 
     override val disableWidgetOnCheckedChanged: Boolean
         get() = false
 
-    override fun isAvailable(context: Context): Boolean = true
+    override val availabilityDescription = "The telephony stack must support disabling a pSIM."
+
+    override fun getAvailabilityStability() = PreconditionStability.UNSTABLE
+
+    override fun isAvailable(context: Context): Boolean {
+        val subInfo =
+            subscriptionRepository.getSelectableSubscriptionInfoList().firstOrNull {
+                it.subscriptionId == subId
+            } ?: return false
+        // For eSIM, we always want the toggle. If telephony stack support disabling a pSIM
+        // directly, we show the toggle.
+        return subInfo.isEmbedded ||
+            context.requireSubscriptionManager().canDisablePhysicalSubscription()
+    }
 
     override fun tags(context: Context) = arrayOf(KEY_MOBILE_DATA)
 
@@ -82,11 +107,20 @@ class MobileNetworkMainSwitchPreference(
     override fun getWritePermit(context: Context, callingPid: Int, callingUid: Int) =
         ReadWritePermit.DISALLOW
 
-    override fun onResume(context: PreferenceLifecycleContext) {
-        super.onResume(context)
-        // To make sure UI be matching the latest subscription state in the foreground.
-        context.notifyPreferenceChange(KEY)
+    override val supportsWrite = false
+
+    override fun onStart(context: PreferenceLifecycleContext) {
+        super.onStart(context)
+        context.lifecycleScope.launch(Dispatchers.Default) {
+            subscriptionActivationRepository.isActivationChangeableFlow().collect {
+                isActivationChangeable.value = it
+                context.notifyPreferenceChange(KEY)
+            }
+        }
     }
+
+    override val sensitivityLevel: Int
+        get() = SensitivityLevel.REQUIRES_CONFIRMATION
 
     override fun storage(context: Context): KeyValueStore =
         MobileNetworkSwitchStorage(
@@ -95,6 +129,20 @@ class MobileNetworkMainSwitchPreference(
             subscriptionActivationRepository,
             subscriptionRepository,
         )
+
+    override fun bind(preference: Preference, metadata: PreferenceMetadata) {
+        super.bind(preference, metadata)
+        preference.onPreferenceChangeListener = this
+    }
+
+    override fun onPreferenceChange(preference: Preference, newValue: Any?) =
+        false.also {
+            scope.launch(Dispatchers.IO) {
+                (newValue as? Boolean)?.let { isActive ->
+                    subscriptionActivationRepository.setActive(subId, isActive)
+                }
+            }
+        }
 
     @Suppress("UNCHECKED_CAST")
     @VisibleForTesting
@@ -110,7 +158,6 @@ class MobileNetworkMainSwitchPreference(
         override fun contains(key: String) = key == KEY
 
         override fun <T : Any> getValue(key: String, valueType: Class<T>): T {
-
             return runBlocking { subscriptionRepository.isSubscriptionEnabledFlow(subId).first() }
                 as T
         }

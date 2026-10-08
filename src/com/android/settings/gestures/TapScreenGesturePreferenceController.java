@@ -29,8 +29,8 @@ import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
 
-import androidx.preference.Preference;
-import androidx.preference.PreferenceScreen;
+// LINT.IfChange
+public class TapScreenGesturePreferenceController extends GesturePreferenceController {
 
 import com.android.settings.R;
 import com.android.settings.core.TogglePreferenceController;
@@ -122,53 +122,5 @@ public class TapScreenGesturePreferenceController extends TogglePreferenceContro
         }
         return mAmbientConfig;
     }
-
-    @Override
-    public int getSliceHighlightMenuRes() {
-        return NO_RES;
-    }
-
-    @Override
-    public void onStart() {
-        if (mSettingObserver != null) {
-            mSettingObserver.register(mContext.getContentResolver());
-            mSettingObserver.onChange(false, null);
-        }
-    }
-
-    @Override
-    public void onStop() {
-        if (mSettingObserver != null) {
-            mSettingObserver.unregister(mContext.getContentResolver());
-        }
-    }
-
-    private class SettingObserver extends ContentObserver {
-        private final Uri mUri = Settings.Secure.getUriFor(SECURE_KEY);
-        private final Uri mAmbientUri = Settings.Secure.getUriFor(AMBIENT_SECURE_KEY);
-
-        private final Preference mPreference;
-
-        SettingObserver(Preference preference) {
-            super(Handler.getMain());
-            mPreference = preference;
-        }
-
-        public void register(ContentResolver cr) {
-            cr.registerContentObserver(mUri, false, this);
-            cr.registerContentObserver(mAmbientUri, false, this);
-        }
-
-        public void unregister(ContentResolver cr) {
-            cr.unregisterContentObserver(this);
-        }
-
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-            super.onChange(selfChange, uri);
-            if (uri == null || mUri.equals(uri) || mAmbientUri.equals(uri)) {
-                updateState(mPreference);
-            }
-        }
-    }
 }
+// LINT.ThenChange(TapScreenGestureApiScreen.kt)

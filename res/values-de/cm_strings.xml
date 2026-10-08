@@ -38,6 +38,8 @@
     <string name="heads_up_notifications_enabled_summary">Wichtige Benachrichtigungen in einem kleinen, schwebenden Fenster anzeigen</string>
     <string name="high_touch_sensitivity_title">Hohe Touch-Empfindlichkeit</string>
     <string name="high_touch_sensitivity_summary">Touch-Empfindlichkeit erhöhen, um den Touchscreen auch mit Handschuhen bedienen zu können</string>
+    <string name="tethering_allow_vpn_upstreams_title">VPN für verbundene Geräte verwenden</string>
+    <string name="tethering_allow_vpn_upstreams_summary">Wenn dieses Gerät ein VPN verwendet, werden alle Geräte, die mit dem Hotspot verbunden sind, dasselbe VPN verwenden</string>
     <string name="lock_settings_picker_pattern_size_message">Größe des Musters auswählen</string>
     <string name="lockpattern_settings_enable_error_path_title">Sperrmuster-Fehler anzeigen</string>
     <string name="lockpattern_settings_enable_dots_title">Sperrmuster-Punkte anzeigen</string>
@@ -61,7 +63,6 @@
     <string name="fingerprint_enroll_touch_dialog_message_side" product="tablet">Berühre den Sensor an der Seite deines Tablets.</string>
     <string name="fingerprint_enroll_touch_dialog_message_side" product="device">Berühre den Sensor an der Seite deines Geräts.</string>
     <string name="fingerprint_enroll_touch_dialog_message_side" product="default">Berühre den Sensor an der Seite deines Telefons.</string>
-    <string name="security_settings_require_screen_on_to_auth_with_proximity_description">Berühre den Sensor, um das Gerät auch bei ausgeschaltetem Bildschirm zu entsperren. Der Annäherungssensor verhindert versehentliches Entsperren.</string>
     <string name="show_navbar_hint_title">Angedeutete Navigationsleiste</string>
     <string name="show_navbar_hint_summary">Deutet Navigationsleiste am unteren Bildschirmrand an</string>
     <string name="auto_brightness_one_shot_title">Einmalige automatische Helligkeitseinstellung</string>
@@ -78,8 +79,6 @@
     <string name="unlock_scramble_pin_layout_summary">Bei jedem Entsperrversuch die Ziffernanordnung zufällig neu wählen</string>
     <string name="proximity_wake_title">Unbeabsichtigtes Aufwecken verhindern</string>
     <string name="proximity_wake_summary">Vor dem Aufwecken des Gerätes Näherungssensor überprüfen</string>
-    <string name="touchscreen_gesture_settings_title">Bildschirmgesten</string>
-    <string name="touchscreen_gesture_settings_summary">Führe durch verschiedene Bildschirmgesten einige schnelle Aktionen aus</string>
     <string name="touchscreen_hovering_title">Touchscreen als Maus verwenden</string>
     <string name="touchscreen_hovering_summary">Erlaubt es, den über dem Touchscreen schwebenden Finger im Browser, Remote Desktop usw. als Mauszeiger zu verwenden.</string>
     <string name="wake_when_plugged_or_unplugged_title">Beim Einstecken aufwecken</string>

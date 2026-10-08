@@ -33,7 +33,6 @@ import static com.android.settings.biometrics.BiometricEnrollBase.EXTRA_KEY_CHAL
 import static com.android.settings.core.BasePreferenceController.AVAILABLE;
 import static com.android.settings.core.BasePreferenceController.CONDITIONALLY_UNAVAILABLE;
 
-import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -46,6 +45,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ResourceId;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.hardware.fingerprint.Fingerprint;
 import android.hardware.fingerprint.FingerprintManager;
 import android.hardware.fingerprint.FingerprintSensorPropertiesInternal;
@@ -54,8 +54,6 @@ import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -139,9 +137,6 @@ public class FingerprintSettings extends SubSettings {
 
     private static final int RESULT_FINISHED = BiometricEnrollBase.RESULT_FINISHED;
     private static final int RESULT_TIMEOUT = BiometricEnrollBase.RESULT_TIMEOUT;
-    @VisibleForTesting
-    static final VibrationEffect SUCCESS_VIBRATION_EFFECT =
-            VibrationEffect.get(VibrationEffect.EFFECT_CLICK);
 
     @Override
     public Intent getIntent() {
@@ -373,7 +368,6 @@ public class FingerprintSettings extends SubSettings {
         private FingerprintAuthenticateSidecar mAuthenticateSidecar;
         private FingerprintRemoveSidecar mRemovalSidecar;
         private HashMap<Integer, String> mFingerprintsRenaming;
-        private Vibrator mVibrator;
 
         @Nullable
         private UdfpsEnrollCalibrator mCalibrator;
@@ -479,7 +473,7 @@ public class FingerprintSettings extends SubSettings {
          * FingerprintExtPreferencesProvider
          */
         private boolean onExtIntentPreferenceClick(@NonNull Preference preference) {
-            if (!(preference instanceof PrimarySwitchIntentPreference)) {
+            if (!(preference instanceof PrimarySwitchIntentPreference) || mToken == null) {
                 return false;
             }
 
@@ -671,7 +665,6 @@ public class FingerprintSettings extends SubSettings {
                     addFirstFingerprint(null);
                 }
             }
-            mVibrator = getContext().getSystemService(Vibrator.class);
             final PreferenceScreen root = getPreferenceScreen();
             root.removeAll();
             addPreferencesFromResource(getPreferenceScreenResId());
@@ -849,7 +842,8 @@ public class FingerprintSettings extends SubSettings {
             // This needs to be after setting ids, otherwise
             // |mRequireScreenOnToAuthPreferenceController.isChecked| is always checking the primary
             // user instead of the user with |mUserId|.
-            if ((isScreenOffUnlcokSupported())
+            if ((!isUdfps() && isScreenOffUnlcokSupported())
+                    || (screenOffUnlockUdfps() && isScreenOffUnlcokSupported())
                     || getExtPreferenceProvider(requireContext()).getSize() > 0) {
                 addFingerprintUnlockCategory();
             }
@@ -1085,7 +1079,8 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
         private void updatePreferencesAfterFingerprintRemoved() {
             updateAddPreference();
             updateUseFingerprintToEnableStatus();
-            if (isScreenOffUnlcokSupported()) {
+            if ((!isUdfps() && isScreenOffUnlcokSupported()) ||
+                    (screenOffUnlockUdfps() && isScreenOffUnlcokSupported())) {
                 updateFingerprintUnlockCategoryVisibility();
             }
             updatePreferences();
@@ -1417,23 +1412,10 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
                                         getActivity(),
                                         mBiometricsAuthenticationRequested,
                                         mUserId);
-                        if (android.hardware.biometrics.Flags.bpFallbackOptions()) {
-                            if (biometricAuthStatus != Utils.BiometricStatus.NOT_ACTIVE) {
-                                Utils.launchBiometricPromptForMandatoryBiometrics(this,
-                                        BIOMETRIC_AUTH_REQUEST,
-                                        mUserId, true /* hideBackground */);
-                            } else {
-                                handleAuthenticationSuccessful(mGkPwHandle);
-                            }
-                        } else if (biometricAuthStatus == Utils.BiometricStatus.OK) {
+                        if (biometricAuthStatus != Utils.BiometricStatus.NOT_ACTIVE) {
                             Utils.launchBiometricPromptForMandatoryBiometrics(this,
                                     BIOMETRIC_AUTH_REQUEST,
                                     mUserId, true /* hideBackground */);
-                        } else if (biometricAuthStatus != Utils.BiometricStatus.NOT_ACTIVE) {
-                            IdentityCheckBiometricErrorDialog
-                                    .showBiometricErrorDialogAndFinishActivityOnDismiss(
-                                            getActivity(),
-                                            biometricAuthStatus);
                         } else {
                             handleAuthenticationSuccessful(mGkPwHandle);
                         }
@@ -1607,11 +1589,7 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
         }
 
         private void highlightFingerprintItem(int fpId) {
-            if (Flags.msdlFeedback()) {
-                MSDLPlayerWrapper.INSTANCE.playToken(MSDLToken.UNLOCK);
-            } else {
-                mVibrator.vibrate(SUCCESS_VIBRATION_EFFECT);
-            }
+            MSDLPlayerWrapper.INSTANCE.playToken(MSDLToken.UNLOCK);
             String prefName = genKey(fpId);
             FingerprintPreference fpref = (FingerprintPreference) findPreference(prefName);
             if (fpref == null) {
@@ -1629,6 +1607,9 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
         private void setupFingerprintRecognition(
                 @NonNull FingerprintPreference fpref, Fingerprint fp) {
             final View view = fpref.getView();
+            if (view == null) {
+                return;
+            }
             final AccessibilityManager a11y =
                     view.getContext().getSystemService(AccessibilityManager.class);
             if (a11y == null || !a11y.isTouchExplorationEnabled()) return;
@@ -1905,7 +1886,6 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
 
                 final TextView message =
                         dialog.findViewById(R.id.udfps_fingerprint_sensor_message);
-                final Vibrator vibrator = getContext().getSystemService(Vibrator.class);
                 final FingerprintManager fpm = Utils.getFingerprintManagerOrNull(getContext());
                 mCancellationSignal = new CancellationSignal();
                 fpm.authenticate(
@@ -1938,12 +1918,7 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
 
                             @Override
                             public void onAuthenticationFailed() {
-                                if (Flags.msdlFeedback()) {
-                                    MSDLPlayerWrapper.INSTANCE.playToken(MSDLToken.FAILURE);
-                                } else {
-                                    vibrator.vibrate(
-                                        VibrationEffect.get(VibrationEffect.EFFECT_DOUBLE_CLICK));
-                                }
+                                MSDLPlayerWrapper.INSTANCE.playToken(MSDLToken.FAILURE);
                                 message.setText(R.string.fingerprint_check_enroll_not_recognized);
                                 message.postDelayed(() -> {
                                     message.setText(R.string.fingerprint_check_enroll_touch_sensor);
@@ -2194,17 +2169,34 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
             clearHighlight();
             final int backgroundFrom = getBackgroundRes(false /* isHighlighted */);
             final int backgroundTo = getBackgroundRes(true /* isHighlighted */);
-            if (backgroundTo == 0 || backgroundFrom == 0) {
+            if (backgroundFrom == 0 || backgroundTo == 0) {
                 return;
             }
-            mHighlightAnimator = ValueAnimator.ofObject(
-                    new ArgbEvaluator(), backgroundFrom, backgroundTo);
+
+            final Drawable fromDrawable = getContext().getDrawable(backgroundFrom);
+            final Drawable toDrawable = getContext().getDrawable(backgroundTo);
+            if (fromDrawable == null || toDrawable == null) {
+                return;
+            }
+            fromDrawable.mutate();
+            toDrawable.mutate();
+            toDrawable.setAlpha(0);
+
+            final LayerDrawable layerDrawable = new LayerDrawable(
+                    new Drawable[]{fromDrawable, toDrawable});
+            layerDrawable.setPaddingMode(LayerDrawable.PADDING_MODE_STACK);
+            mView.setBackground(layerDrawable);
+
+            mHighlightAnimator = ValueAnimator.ofFloat(0f, 1f);
             mHighlightAnimator.setDuration(HIGHLIGHT_DURATION);
-            mHighlightAnimator.addUpdateListener(
-                    animator -> mView.setBackgroundResource((int) animator.getAnimatedValue()));
             mHighlightAnimator.setRepeatMode(ValueAnimator.REVERSE);
             mHighlightAnimator.setRepeatCount(4);
+            mHighlightAnimator.addUpdateListener(animator -> {
+                final float fraction = (float) animator.getAnimatedValue();
+                toDrawable.setAlpha((int) (255 * fraction));
+            });
             mHighlightAnimator.start();
+
             mView.postDelayed(mClearHighlightRunnable, RESET_HIGHLIGHT_DURATION);
         }
 
@@ -2227,6 +2219,11 @@ private void setupFingerprintUnlockCategoryPreferencesForScreenOffUnlock() {
                 mHighlightAnimator.cancel();
                 mHighlightAnimator = null;
             }
+
+            if (mView == null) {
+                return;
+            }
+
             clearDescription();
             mView.removeCallbacks(mClearHighlightRunnable);
             final int backgroundRes = getBackgroundRes(false /* isHighlighted */);

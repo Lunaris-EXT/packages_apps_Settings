@@ -38,7 +38,8 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.preference.Preference;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreferenceCompat;
 
@@ -107,10 +108,14 @@ public class SystemNavigationGestureSettings extends RadioButtonPickerFragment i
                 ServiceManager.getService(Context.OVERLAY_SERVICE));
 
         mVideoPreference = new IllustrationPreference(context);
-        Context windowContext = context.createWindowContext(TYPE_APPLICATION_OVERLAY, null);
-        if (windowContext.getResources()
-                .getConfiguration().smallestScreenWidthDp >= MIN_LARGESCREEN_WIDTH_DP) {
-            mVideoPreference.applyDynamicColor();
+        try {
+            Context windowContext = context.createWindowContext(TYPE_APPLICATION_OVERLAY, null);
+            if (windowContext.getResources()
+                    .getConfiguration().smallestScreenWidthDp >= MIN_LARGESCREEN_WIDTH_DP) {
+                mVideoPreference.applyDynamicColor();
+            }
+        } catch (UnsupportedOperationException e) {
+            // Catch unsupported contexts in test scenarios
         }
         setIllustrationVideo(mVideoPreference, getDefaultKey());
 
@@ -232,20 +237,39 @@ public class SystemNavigationGestureSettings extends RadioButtonPickerFragment i
 
         pref.setSummary(((CandidateInfoExtra) info).loadSummary());
 
-        configureExtraWidget(pref, key, defaultKey);
-    }
+        if (KEY_SYSTEM_NAV_GESTURAL.equals(info.getKey())) {
+            pref.setExtraWidgetOnClickListener((v) -> startActivity(new Intent(
+                    GestureNavigationSettingsFragment.GESTURE_NAVIGATION_SETTINGS)
+                    .setPackage(getContext().getPackageName())));
 
-    @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (preference == mNavbarVisibility) {
-            boolean showing = ((Boolean)newValue);
-            if (threeButtonNav != null) threeButtonNav.setEnabled(showing);
-            if (twoButtonNav != null) twoButtonNav.setEnabled(showing);
-            if (gesturalNav != null) gesturalNav.setEnabled(showing);
-            SystemUtils.showSystemUiRestartDialog(getContext());
-            return true;
+            pref.setExtraWidgetContentDescription(getContext().getString(
+                    R.string.gesture_settings_button_description));
+            addClickHintForExtra(pref, R.string.gesture_settings_extra_button_hint);
+        }
+
+        if ((KEY_SYSTEM_NAV_2BUTTONS.equals(info.getKey())
+                || KEY_SYSTEM_NAV_3BUTTONS.equals(info.getKey()))) {
+            pref.setExtraWidgetOnClickListener((v) ->
+                    new SubSettingLauncher(getContext())
+                            .setDestination(ButtonNavigationSettingsFragment.class.getName())
+                            .setSourceMetricsCategory(SettingsEnums.SETTINGS_GESTURE_SWIPE_UP)
+                            .launch());
+
+            pref.setExtraWidgetContentDescription(getContext().getString(
+                    R.string.button_navigation_settings_button_description));
+            addClickHintForExtra(pref, R.string.button_navigation_settings_extra_button_hint);
         }
         return false;
+    }
+
+    private void addClickHintForExtra(SelectorWithWidgetPreference pref, int hint) {
+        pref.setExtraWidgetOnBindConsumer((widget) ->
+                ViewCompat.replaceAccessibilityAction(
+                        widget,
+                        AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_CLICK,
+                        getContext().getString(hint),
+                        null
+                ));
     }
 
     @Override

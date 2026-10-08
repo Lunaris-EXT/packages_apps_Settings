@@ -236,12 +236,7 @@ public abstract class ProfileSelectFragment extends DashboardFragment {
             if (extraTab != -1) {
                 return adapter.getPositionForProfileTab(extraTab);
             }
-            final UserManager userManager = getSystemService(UserManager.class);
-            UserHandle mainUser = userManager.getMainUser();
-            if (mainUser == null) {
-                mainUser = UserHandle.SYSTEM;
-            }
-            final int userId = bundle.getInt(EXTRA_USER_ID, mainUser.getIdentifier());
+            final int userId = bundle.getInt(EXTRA_USER_ID, activity.getUserId());
             final boolean isWorkProfile = UserManager.get(activity).isManagedProfile(userId);
             if (isWorkProfile) {
                 return adapter.getPositionForProfileTab(WORK_TAB);
@@ -322,7 +317,7 @@ public abstract class ProfileSelectFragment extends DashboardFragment {
             List<UserInfo> userInfos = userManager.getProfiles(UserHandle.myUserId());
 
             for (UserInfo userInfo : userInfos) {
-                if (userInfo.isMain()) {
+                if (userInfo.canHaveProfile()) {
                     fragments.add(
                             createAndGetFragment(
                                     ProfileType.PERSONAL,

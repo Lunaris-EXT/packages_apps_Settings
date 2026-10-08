@@ -38,7 +38,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.settings.R;
-import com.android.settings.flags.Flags;
 import com.android.settings.SettingsActivity;
 import com.android.settings.password.PasswordUtils;
 import com.android.settingslib.bluetooth.CachedBluetoothDevice;
@@ -126,9 +125,7 @@ public final class DevicePickerFragment extends DeviceListPreferenceFragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if (Flags.enableNearbyShareEntrypoint()) {
-            initNearbySharingController();
-        }
+        initNearbySharingController();
     }
 
     private void initNearbySharingController() {

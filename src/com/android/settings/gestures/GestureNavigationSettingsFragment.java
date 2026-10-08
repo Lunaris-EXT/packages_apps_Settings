@@ -25,6 +25,7 @@ import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.provider.Settings;
+import android.view.Display;
 import android.view.WindowManager;
 
 import androidx.preference.ListPreference;
@@ -268,6 +269,7 @@ public class GestureNavigationSettingsFragment extends DashboardFragment impleme
     private boolean isGestureTutorialAvailable() {
         Context context = getContext();
         return context != null
+                && context.getDisplayId() == Display.DEFAULT_DISPLAY
                 && mLaunchTutorialIntent.resolveActivity(context.getPackageManager()) != null;
     }
 

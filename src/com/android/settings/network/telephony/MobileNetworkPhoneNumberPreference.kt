@@ -26,6 +26,7 @@ import com.android.settingslib.datastore.KeyValueStore
 import com.android.settingslib.datastore.Permissions
 import com.android.settingslib.metadata.PersistentPreference
 import com.android.settingslib.metadata.PreferenceAvailabilityProvider
+import com.android.settingslib.metadata.preferencesapi.preconditions.PreconditionStability
 import com.android.settingslib.metadata.PreferenceChangeReason
 import com.android.settingslib.metadata.PreferenceLifecycleContext
 import com.android.settingslib.metadata.PreferenceLifecycleProvider
@@ -46,8 +47,15 @@ class MobileNetworkPhoneNumberPreference(private val data: MobileNetworkData) :
     override val key: String
         get() = KEY
 
+    override val purpose: Int
+        get() = R.string.mobile_network_phone_number_purpose
+
     override val title: Int
         get() = R.string.status_number
+
+    override val availabilityDescription = "A mobile network must be available."
+
+    override fun getAvailabilityStability() = PreconditionStability.UNSTABLE
 
     override fun isAvailable(context: Context) = data.phoneNumberDataFlow.value.isAvailable
 
@@ -74,8 +82,18 @@ class MobileNetworkPhoneNumberPreference(private val data: MobileNetworkData) :
     override fun getWritePermit(context: Context, callingPid: Int, callingUid: Int) =
         ReadWritePermit.DISALLOW
 
+    override val supportsWrite = false
+
     override val sensitivityLevel
-        get() = SensitivityLevel.LOW_SENSITIVITY
+        get() = SensitivityLevel.NO_SENSITIVITY
+
+    override fun onCreate(context: PreferenceLifecycleContext) {
+        context.requirePreference<Preference>(key).onPreferenceClickListener =
+            Preference.OnPreferenceClickListener { p ->
+                p.summary = data.phoneNumberDataFlow.value.summary
+                return@OnPreferenceClickListener true
+            }
+    }
 
     override fun onCreate(context: PreferenceLifecycleContext) {
         context.requirePreference<Preference>(key).onPreferenceClickListener =

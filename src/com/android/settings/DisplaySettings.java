@@ -22,11 +22,13 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.preference.PreferenceFragmentCompat;
 
 import com.android.settings.dashboard.DashboardFragment;
 import com.android.settings.display.BrightnessLevelPreferenceController;
 import com.android.settings.display.CameraGesturePreferenceController;
 import com.android.settings.display.DisplayScreen;
+import com.android.settings.display.ExternalDisplayPreferenceController;
 import com.android.settings.display.LiftToWakePreferenceController;
 import com.android.settings.display.ShowOperatorNamePreferenceController;
 import com.android.settings.display.TapToWakePreferenceController;
@@ -34,6 +36,7 @@ import com.android.settings.display.BlurSettingsPreferenceController;
 import com.android.settings.display.ThemePreferenceController;
 import com.android.settings.display.VrDisplayPreferenceController;
 import com.android.settings.search.BaseSearchIndexProvider;
+import com.android.settings.utils.DesktopSettingsUtils;
 import com.android.settingslib.core.AbstractPreferenceController;
 import com.android.settingslib.core.lifecycle.Lifecycle;
 import com.android.settingslib.search.SearchIndexable;
@@ -43,6 +46,7 @@ import lineageos.hardware.LineageHardwareManager;
 import java.util.ArrayList;
 import java.util.List;
 
+// LINT.IfChange
 @SearchIndexable(forTarget = SearchIndexable.ALL & ~SearchIndexable.ARC)
 public class DisplaySettings extends DashboardFragment {
     private static final String TAG = "DisplaySettings";
@@ -73,7 +77,15 @@ public class DisplaySettings extends DashboardFragment {
 
     @Override
     protected List<AbstractPreferenceController> createPreferenceControllers(Context context) {
-        return buildPreferenceControllers(context, getSettingsLifecycle());
+        final List<AbstractPreferenceController> controllers =
+                buildPreferenceControllers(context, getSettingsLifecycle());
+
+        for (AbstractPreferenceController controller : controllers) {
+            if (controller instanceof ExternalDisplayPreferenceController) {
+                ((ExternalDisplayPreferenceController) controller).setFragment(this);
+            }
+        }
+        return controllers;
     }
 
     @Override
@@ -92,6 +104,10 @@ public class DisplaySettings extends DashboardFragment {
         controllers.add(new ShowOperatorNamePreferenceController(context));
         controllers.add(new ThemePreferenceController(context));
         controllers.add(new BrightnessLevelPreferenceController(context, lifecycle));
+
+        if (DesktopSettingsUtils.shouldShowTopLevelDeviceCategory(context)) {
+            controllers.add(new ExternalDisplayPreferenceController(context, lifecycle));
+        }
         return controllers;
     }
 
@@ -129,3 +145,5 @@ public class DisplaySettings extends DashboardFragment {
         return DisplayScreen.KEY;
     }
 }
+// LINT.ThenChange(com.android.settings.display.DisplayScreen.kt,
+// com.android.settings.display.DisplayApiScreen.kt)

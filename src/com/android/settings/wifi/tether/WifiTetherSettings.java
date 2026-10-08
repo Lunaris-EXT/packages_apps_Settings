@@ -156,8 +156,9 @@ public class WifiTetherSettings extends RestrictedDashboardFragment
             finish();
             return;
         }
-
-        setIfOnlyAvailableForAdmins(true);
+        if (!WifiUtils.isWifiMultiuserEnabled()) {
+            setIfOnlyAvailableForAdmins(true);
+        }
         mUnavailable = isUiRestricted() || !mWifiRestriction.isHotspotAvailable(getContext());
         if (mUnavailable) {
             return;

@@ -62,7 +62,6 @@ public class DeviceAdminListItemTest {
         when(mDeviceAdminInfo.getActivityInfo()).thenReturn(new ActivityInfo());
         mDeviceAdminInfo.getActivityInfo().applicationInfo = new ApplicationInfo();
         when(mDeviceAdminInfo.loadLabel(any(PackageManager.class))).thenReturn(label);
-        verify(mDeviceAdminInfo, never()).loadDescription(any(PackageManager.class));
         when(mDeviceAdminInfo.loadDescriptionSafe(any(PackageManager.class)))
                 .thenReturn(description);
         when(mDeviceAdminInfo.loadIcon(any(PackageManager.class)))
@@ -71,6 +70,7 @@ public class DeviceAdminListItemTest {
 
         DeviceAdminListItem item = new DeviceAdminListItem(mContext, mDeviceAdminInfo);
 
+        verify(mDeviceAdminInfo, never()).loadDescription(any(PackageManager.class));
         assertThat(item.getKey()).isEqualTo("0@" + cn.flattenToShortString());
         assertThat(item.getName()).isEqualTo(label);
         assertThat(item.getDescription()).isEqualTo(description);

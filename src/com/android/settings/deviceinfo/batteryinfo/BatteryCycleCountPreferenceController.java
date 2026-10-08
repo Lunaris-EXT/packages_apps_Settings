@@ -36,9 +36,6 @@ public class BatteryCycleCountPreferenceController extends BasePreferenceControl
 
     @Override
     public int getAvailabilityStatus() {
-        if (BatteryInfoUtils.isNodeValid(mContext, R.string.config_battery_cycle_count_node)) {
-            return AVAILABLE;
-        }
         return mContext.getResources().getBoolean(R.bool.config_show_battery_cycle_count)
                 ? AVAILABLE : UNSUPPORTED_ON_DEVICE;
     }

@@ -40,14 +40,10 @@ public class BatteryTechnologyPreferenceController extends BasePreferenceControl
 
     @Override
     public CharSequence getSummary() {
-        String technology = BatteryInfoUtils.readNode(
-                mContext, R.string.config_battery_technology_node);
-        if (technology == null || technology.isEmpty()) {
-            final Intent batteryIntent = BatteryUtils.getBatteryIntent(mContext);
-            technology = batteryIntent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
-        }
+        final Intent batteryIntent = BatteryUtils.getBatteryIntent(mContext);
+        final String technology = batteryIntent.getStringExtra(BatteryManager.EXTRA_TECHNOLOGY);
 
-        return technology != null && !technology.isEmpty()
+        return technology != null
                 ? technology
                 : mContext.getText(R.string.battery_technology_not_available);
     }
